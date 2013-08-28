@@ -1,0 +1,20 @@
+<coordinator-app name="DailyDLoad" frequency="1440" start="2013-08-27T00:00Z" end="2013-08-31T00:00Z" timezone="America/Los_Angeles" xmlns="uri:oozie:coordinator:0.1">
+
+   <datasets>
+      <dataset name="input1" frequency="1440" initial-instance="2013-08-26T00:00Z" timezone="America/Los_Angeles">
+         <uri-template>${inputTRpath}</uri-template>
+         <done-flag>_copy.done</done-flag>
+      </dataset>
+   </datasets>
+   <input-events>
+      <data-in name="coordInput1" dataset="input1">
+         <instance>${startInst}</instance>
+      </data-in>
+   </input-events>
+
+   <action>
+      <workflow>
+         <app-path>${workflowPath}</app-path>
+      </workflow>
+   </action>     
+</coordinator-app>

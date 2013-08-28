@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<workflow-app xmlns="uri:oozie:workflow:0.2" name="ssh-wf">
+    <start to="hdfs-node-staging"/>
+    <action name="hdfs-node-staging">
+
+	<fs>
+            <move source="${nameNode}/staging/dailydataload/newData"
+                  target="/working/dailydataload"/>
+        </fs>
+        <ok to="ssh-hive-script"/>
+        <error to="fail-staging"/>
+    </action>
+
+    <action name="ssh-hive-script">
+        <ssh xmlns="uri:oozie:ssh-action:0.1">
+            <host>hdfs@192.168.1.196</host>
+            <command>bash</command>
+	    <args>/usr/bin/hive</args>
+            <args>-f</args>
+            <args>${hiveScript}</args>
+        </ssh>
+        <ok to="hdfs-node-working"/>
+        <error to="fail-hive-working"/>
+    </action>
+
+    <action name="hdfs-node-working">
+        <fs>
+            <move source="${nameNode}/working/dailydataload/newData"
+                  target="/archive/dailydataload/${replaceAll(timestamp(), ':', '')}"/>
+        </fs>
+        <ok to="end"/>
+        <error to="fail-archive"/>
+    </action>
+
+    <kill name="fail-hive-working">
+        <message>could not complete Hive action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <kill name="fail-staging">
+        <message>could not move from staging to working action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <kill name="fail-archive">
+        <message>could not move from working to archive action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+
+    <end name="end"/>
+</workflow-app>
+
